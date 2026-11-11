@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>Liberty City | Roleplay</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400&subset=cyrillic&display=swap">
 <style>
 	html, body {
 		margin: 0;
@@ -28,6 +29,30 @@
 		height: calc(100vw / var(--ar));
 		transform: translateY(-50%);
 		background: url("background.jpg") center / 100% auto no-repeat;
+	}
+
+	/* Надпись «Идёт загрузка» по центру под логотипом.
+	   Выше или ниже: меняйте top (в процентах от высоты картинки; 70% сейчас).
+	   Размер: font-size. Скорость мигания: 3.2s. Яркость: числа в opacity внутри @keyframes. */
+	#loading {
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 70%;
+		text-align: center;
+		pointer-events: none;
+		font-family: "Playfair Display", "Bodoni MT", Didot, Georgia, "Times New Roman", serif;
+		font-style: italic;
+		font-size: clamp(11px, 1.05vw, 16px);
+		letter-spacing: 0.35em;
+		text-transform: uppercase;
+		color: #fff;
+		text-shadow: 0 1px 6px #000, 0 0 12px #000;
+		animation: pulse 3.2s ease-in-out infinite;
+	}
+	@keyframes pulse {
+		0%, 100% { opacity: 0.2; }
+		50%      { opacity: 0.65; }
 	}
 
 	/* Текст внизу по центру, в чёрной полосе под картинкой */
@@ -65,7 +90,7 @@
 </style>
 </head>
 <body>
-	<div id="bg"></div>
+	<div id="bg"><div id="loading">Идёт загрузка</div></div>
 
 	<!-- Цитаты, слухи и советы по кругу -->
 	<div id="tip"><div class="tag" id="tipTag"></div><div class="text" id="tipText"></div></div>
