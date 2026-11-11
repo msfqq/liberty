@@ -36,12 +36,16 @@
 		left: 50%;
 		bottom: 0;
 		transform: translateX(-50%);
-		width: 46vw;
+		width: 40vw;
 		height: max(calc((100vh - 100vw / var(--ar)) / 2), 56px);
+		box-sizing: border-box;
+		/* Текст прижат к верху нижней полосы (сразу под картинкой), чтобы не попадать под окно загрузки справа.
+		   Хотите ниже, увеличьте padding-top (например 24px); выше, уменьшите (но не меньше 4px). */
+		padding-top: 14px;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
+		justify-content: flex-start;
 		text-align: center;
 		pointer-events: none;
 		opacity: 0;
