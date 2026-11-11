@@ -12,11 +12,12 @@
 		background: #000;
 	}
 
-	/* Фото на весь экран (файл background.jpg лежит рядом с этим файлом) */
+	/* Фото целиком, как в оригинале, с чёрными полосами (файл background.jpg лежит рядом с этим файлом).
+	   Чтобы растянуть фото на весь экран без полос, замените "contain" на "cover". */
 	#bg {
 		position: fixed;
 		inset: 0;
-		background: url("background.jpg") center / cover no-repeat;
+		background: #000 url("background.jpg") center / contain no-repeat;
 	}
 
 	/* Маленькая белая полупрозрачная кнопка звука справа внизу */
@@ -67,12 +68,40 @@
 
 	music.volume = 0.4; // громкость от 0 до 1
 
-	// на случай, если автозапуск не сработал
-	music.play().catch(function () {});
+	// значок: "звук выключен", если музыка не играет или заглушена
+	function refresh() {
+		btn.className = (music.paused || music.muted) ? "muted" : "";
+	}
+
+	function start() {
+		var p = music.play();
+		if (p && p.catch) p.catch(refresh);
+	}
+
+	music.addEventListener("play", refresh);
+	music.addEventListener("pause", refresh);
+	music.addEventListener("volumechange", refresh);
+
+	// пробуем запустить сразу
+	start();
+	refresh();
+
+	// Обычные браузеры запрещают автозвук: тогда музыка стартует при первом клике или нажатии клавиши
+	function firstGesture(e) {
+		if (e && e.target && btn.contains(e.target)) return; // клик по самой кнопке обрабатывается ниже
+		if (music.paused) start();
+	}
+	["click", "keydown", "touchstart"].forEach(function (name) {
+		document.addEventListener(name, firstGesture);
+	});
 
 	btn.onclick = function () {
-		music.muted = !music.muted;
-		btn.className = music.muted ? "muted" : "";
+		if (music.paused) {
+			music.muted = false;
+			start();
+		} else {
+			music.muted = !music.muted;
+		}
 	};
 </script>
 </body>
