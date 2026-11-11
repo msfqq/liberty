@@ -75,7 +75,6 @@
 		text-align: center;
 		pointer-events: none;
 		opacity: 0;
-		transition: opacity 0.8s ease;
 		text-shadow: 0 1px 6px #000, 0 0 12px #000;
 	}
 	#tip .tag {
@@ -168,10 +167,6 @@
 		["ФАКТ",   "Метро в Либерти открылось в 1879 году и с тех пор не прекращало опаздывать."]
 	];
 
-	// Сколько висит текст (в миллисекундах, 1000 = 1 секунда)
-	var TIP_MIN = 5000;      // минимум, сколько текст полностью виден на экране
-	var TIP_PER_CHAR = 40;   // добавка на каждую букву, чтобы длинные цитаты успевали прочитать
-
 	var tipBox = document.getElementById("tip");
 	var tipTag = document.getElementById("tipTag");
 	var tipText = document.getElementById("tipText");
@@ -191,15 +186,13 @@
 		var t = order[tipIndex % order.length];
 		tipIndex++;
 
-		tipBox.style.opacity = 0;
-		setTimeout(function () {
-			tipTag.textContent = t[0];
-			tipText.textContent = t[1];
-			tipBox.style.opacity = 1;
-		}, 800);
+		// текст меняется мгновенно, без плавного появления и исчезновения
+		tipTag.textContent = t[0];
+		tipText.textContent = t[1];
+		tipBox.style.opacity = 1;
 
-		// чем длиннее текст, тем дольше он висит: минимум TIP_MIN мс полностью видно + TIP_PER_CHAR мс на каждую букву
-		setTimeout(showNextTip, 800 + 800 + TIP_MIN + t[1].length * TIP_PER_CHAR);
+		// чем длиннее текст, тем дольше он висит: 3500 мс + 50 мс на каждую букву (1000 мс = 1 секунда)
+		setTimeout(showNextTip, 3500 + t[1].length * 50);
 	}
 
 	setTimeout(showNextTip, 600);
