@@ -30,71 +30,57 @@
 		background: url("background.jpg") center / 100% auto no-repeat;
 	}
 
-	/* Маленькая белая полупрозрачная кнопка звука слева внизу */
-	#mute {
+	/* Текст внизу по центру, в чёрной полосе под картинкой */
+	#tip {
 		position: fixed;
-		left: 18px;
-		bottom: 18px;
-		width: 38px;
-		height: 38px;
-		padding: 0;
-		border: 0;
-		border-radius: 50%;
-		background: rgba(255, 255, 255, 0.16);
-		cursor: pointer;
-		opacity: 0.55;
-		transition: opacity 0.2s, background 0.2s;
+		left: 50%;
+		bottom: 0;
+		transform: translateX(-50%);
+		width: 46vw;
+		height: max(calc((100vh - 100vw / var(--ar)) / 2), 56px);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.8s ease;
+		text-shadow: 0 1px 6px #000, 0 0 12px #000;
 	}
-	#mute:hover {
-		opacity: 1;
-		background: rgba(255, 255, 255, 0.3);
+	#tip .tag {
+		font: 600 clamp(10px, 0.9vw, 14px) Arial, sans-serif;
+		letter-spacing: 0.25em;
+		color: #6fb9c8;
+		margin-bottom: 6px;
 	}
-	#mute svg {
-		display: block;
-		width: 22px;
-		height: 22px;
-		margin: 8px;
-		fill: #fff;
+	#tip .text {
+		font: italic clamp(14px, 1.45vw, 22px) / 1.35 Georgia, "Times New Roman", serif;
+		color: rgba(255, 255, 255, 0.88);
 	}
-	#mute .off { display: none; }
-	#mute.muted .on { display: none; }
-	#mute.muted .off { display: block; }
 </style>
 </head>
 <body>
 	<div id="bg"></div>
 
+	<!-- Цитаты, слухи и советы по кругу -->
+	<div id="tip"><div class="tag" id="tipTag"></div><div class="text" id="tipText"></div></div>
+
 	<!-- Музыка (файл music.mp3 лежит рядом с этим файлом), играет по кругу -->
 	<audio id="music" src="music.mp3" autoplay loop preload="auto"></audio>
 
-	<button id="mute" title="Звук вкл / выкл">
-		<svg class="on" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-		<svg class="off" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
-	</button>
-
 <script>
 	var music = document.getElementById("music");
-	var btn = document.getElementById("mute");
 
-	music.volume = 0.3; // громкость от 0 до 1 (0.3 = 30%)
-
-	// значок: "звук выключен", если музыка не играет или заглушена
-	function refresh() {
-		btn.className = (music.paused || music.muted) ? "muted" : "";
-	}
+	music.volume = 0.2; // громкость от 0 до 1 (0.3 = 30%)
 
 	function start() {
 		var p = music.play();
-		if (p && p.catch) p.catch(refresh);
+		if (p && p.catch) p.catch(function () {});
 	}
-
-	music.addEventListener("play", refresh);
-	music.addEventListener("pause", refresh);
-	music.addEventListener("volumechange", refresh);
 
 	// пробуем запустить сразу
 	start();
-	refresh();
 
 	// повторные попытки автозапуска (в игре страница бывает готова к звуку не сразу)
 	var tries = 0;
@@ -112,22 +98,77 @@
 	function SetStatusChanged() { if (music.paused) start(); }
 
 	// Обычные браузеры запрещают автозвук: тогда музыка стартует при первом клике или нажатии клавиши
-	function firstGesture(e) {
-		if (e && e.target && btn.contains(e.target)) return; // клик по самой кнопке обрабатывается ниже
+	function firstGesture() {
 		if (music.paused) start();
 	}
 	["click", "keydown", "touchstart"].forEach(function (name) {
 		document.addEventListener(name, firstGesture);
 	});
 
-	btn.onclick = function () {
-		if (music.paused) {
-			music.muted = false;
-			start();
-		} else {
-			music.muted = !music.muted;
+	// ------------------------------------------------------------------
+	// Тексты на загрузочном экране. Формат строки:  ["МЕТКА", "Текст"],
+	// Добавляйте и удаляйте строки как угодно. Внутри текста не используйте прямые кавычки ",
+	// вместо них пишите «ёлочки».
+	// ------------------------------------------------------------------
+	var TIPS = [
+		["ГОРОД",  "В Либерти-Сити ночь длинная, а память у города ещё длиннее."],
+		["ГОРОД",  "Кофе в этом городе горький. Но новости горче."],
+		["ГОРОД",  "Город не спит. Он просто притворяется, чтобы ты расслабился."],
+		["ГОРОД",  "Если в переулке подозрительно тихо, значит, кто-то уже всё видел."],
+		["ГОРОД",  "Деньги приходят и уходят. Репутация остаётся и работает на тебя. Или против."],
+		["ГОРОД",  "Хороший адвокат стоит дороже хорошего пистолета и никогда не промахивается."],
+		["ГОРОД",  "Тот, кто громко обещает, редко держит слово. Тот, кто молчит, обычно уже всё сделал."],
+
+		["СЛУХ",   "Говорят, у порта по ночам видели чёрную машину без номеров. Утром её там уже не было."],
+		["СЛУХ",   "Говорят, в каждом квартале есть человек, который знает про всех всё. Обычно он владелец закусочной."],
+		["СЛУХ",   "Говорят, ломбардщики знают цену всему, кроме совести."],
+		["СЛУХ",   "Говорят, в этом городе можно потерять всё за одну ночь и найти за одно утро."],
+		["СЛУХ",   "Говорят, самые важные разговоры в городе начинаются со слов «просто мимо проходил»."],
+
+		["СОВЕТ",  "Играй персонажа так, будто у него есть мама, долги и привычка опаздывать."],
+		["СОВЕТ",  "Хорошая отыгровка заразна. Начни первым."],
+		["СОВЕТ",  "Ты не обязан быть героем. Но быть интересным обязан."],
+		["СОВЕТ",  "Перед тем как всё испортить, подумай: а у этой сцены есть красивое продолжение?"],
+		["СОВЕТ",  "Незнакомец в переулке не враг и не друг. Это начало истории."],
+		["СОВЕТ",  "Не знаешь, что сказать? Спроси про погоду. В Либерти-Сити это всегда начало серьёзного разговора."],
+
+		["ФАКТ",   "Статую Свободы подарила Америке Франция. Её открыли в 1886 году."],
+		["ФАКТ",   "Крайслер-билдинг меньше года был самым высоким зданием в мире, пока в 1931 году не построили Эмпайр-стейт."],
+		["ФАКТ",   "В 1884 году по Бруклинскому мосту провели слонов, чтобы доказать горожанам, что он выдержит."],
+		["ФАКТ",   "Нью-йоркское метро открылось в 1904 году и с тех пор не прекращало опаздывать."]
+	];
+
+	var tipBox = document.getElementById("tip");
+	var tipTag = document.getElementById("tipTag");
+	var tipText = document.getElementById("tipText");
+
+	function shuffle(a) {
+		for (var i = a.length - 1; i > 0; i--) {
+			var j = Math.floor(Math.random() * (i + 1));
+			var t = a[i]; a[i] = a[j]; a[j] = t;
 		}
-	};
+		return a;
+	}
+
+	var order = shuffle(TIPS.slice());
+	var tipIndex = 0;
+
+	function showNextTip() {
+		var t = order[tipIndex % order.length];
+		tipIndex++;
+
+		tipBox.style.opacity = 0;
+		setTimeout(function () {
+			tipTag.textContent = t[0];
+			tipText.textContent = t[1];
+			tipBox.style.opacity = 1;
+		}, 800);
+
+		// чем длиннее текст, тем дольше он висит
+		setTimeout(showNextTip, 800 + 3500 + t[1].length * 50);
+	}
+
+	setTimeout(showNextTip, 600);
 </script>
 </body>
 </html>
